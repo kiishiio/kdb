@@ -1,50 +1,43 @@
 #!/bin/bash
 
-#prompts
-read -p "enter keymap (default: us): " KEYMAP
+# ─── PROMPTS ──────────────────────────────────────────────────────
+
+read -p "Enter keymap (default: us): " KEYMAP
 KEYMAP=${KEYMAP:-us}
 loadkeys "$KEYMAP"
 
 clear
-
-read -p "enter username: " USER
-
+read -p "Enter username: " USER
 clear
 
-read -s -p "root password: " ROOTPASS; echo
-read -s -p "user password: " USERPASS; echo
-
+read -s -p "Root password: " ROOTPASS; echo
+read -s -p "User password: " USERPASS; echo
 clear
 
 ls /usr/share/zoneinfo/
-read -p "enter timezone (eg. Europe/Berlin): " ZONE
-
+read -p "Enter timezone (e.g., Europe/Berlin): " ZONE
 clear
 
-read -p "enter locale (default: en_US.UTF-8): " LOCALE
+read -p "Enter locale (default: en_US.UTF-8): " LOCALE
 LOCALE=${LOCALE:-en_US.UTF-8}
-
 clear
 
-read -p "enter hostname: " HOST
-
+read -p "Enter hostname: " HOST
 clear
 
 lsblk
-read -p "enter drive to install on (eg. sda or nvme0n1): " DRIVE
+read -p "Enter drive to install on (e.g., sda or nvme0n1): " DRIVE
 DRIVE="/dev/${DRIVE##/dev/}"
 
-#confirm
-read -p "this will erase $DRIVE, and all its data. are you sure you want to continue? (y/n): " CONFIRM
+read -p "This will erase $DRIVE. Are you sure? (y/n): " CONFIRM
 [[ "$CONFIRM" != "y" ]] && exit 1
-
 clear
 
-read -p "what size shall the root partition in GB be? (default: 40): " ROOTSIZE
+read -p "Root partition size in GB (default: 40): " ROOTSIZE
 ROOTSIZE=${ROOTSIZE:-40}
 
+# ─── PARTITIONING ─────────────────────────────────────────────────
 
-#determine proper suffix
 if [[ "$DRIVE" =~ nvme ]]; then
     P1="${DRIVE}p1"
     P2="${DRIVE}p2"
@@ -57,119 +50,107 @@ else
     P4="${DRIVE}4"
 fi
 
-#wipe drive
 sgdisk --zap-all "$DRIVE"
-sgdisk -n 1:0:+1G -t 1:ef00 "$DRIVE"
-sgdisk -n 2:0:+16G -t 2:8200 "$DRIVE"
+sgdisk -n 1:0:+1G     -t 1:ef00 "$DRIVE"
+sgdisk -n 2:0:+16G    -t 2:8200 "$DRIVE"
 sgdisk -n 3:0:+${ROOTSIZE}G -t 3:8300 "$DRIVE"
-sgdisk -n 4:0:0 -t 4:8300 "$DRIVE"
+sgdisk -n 4:0:0       -t 4:8300 "$DRIVE"
 
-#format drive
 mkfs.fat -F32 "$P1"
-mkswap "$P2"
-swapon "$P2"
+mkswap "$P2" && swapon "$P2"
 mkfs.btrfs -f "$P3"
 mkfs.btrfs -f "$P4"
 
-#mount
 mount "$P3" /mnt
-mkdir -p /mnt/boot /mnt/home
+mkdir -p /mnt/{boot,home}
 mount "$P1" /mnt/boot
 mount "$P4" /mnt/home
 
-mount --bind /dev /mnt/dev
-mount --bind /proc /mnt/proc
-mount --bind /sys /mnt/sys
-mount --bind /run /mnt/run
+for dir in dev proc sys run; do
+    mount --bind /$dir /mnt/$dir
+done
 
-#base system
-pacstrap /mnt bash base linux-lts linux-firmware sudo nano vim btrfs-progs networkmanager "plasma" "kde-applications" sddm sddm-kcm xorg-server nvidia nvidia-utils nvidia-settings kvantum-qt5 --noconfirm
+# ─── BASE INSTALL ────────────────────────────────────────────────
 
-#fstab
+pacstrap /mnt \
+    base base-devel linux-lts linux-lts-headers linux-firmware \
+    btrfs-progs amd-ucode nano sudo reflector mtools dosfstools \
+    xorg-server xorg-xrandr arandr \
+    plasma-meta konsole dolphin ark kwrite kcalc spectacle krunner partitionmanager packagekit-qt5 systemsettings \
+    kvantum-qt5 \
+    sddm sddm-kcm \
+    nvidia nvidia-utils nvidia-settings nvidia-dkms --noconfirm
+
 genfstab -U /mnt >> /mnt/etc/fstab
 
-#
-ROOT_UUID=$(blkid -s PARTUUID -o value "${DRIVE}3")
+# ─── EXPORT VARS ──────────────────────────────────────────────────
 
-export ROOT_UUID
+export KEYMAP USER USERPASS ROOTPASS ZONE LOCALE HOST
 export DRIVE
-export KEYMAP
-export USER
-export USERPASS
-export ROOTPASS
-export ZONE
-export LOCALE
-export HOST
+ROOT_UUID=$(blkid -s PARTUUID -o value "$P3")
+export ROOT_UUID
 
-#chroot
+# ─── CHROOT CONFIG ───────────────────────────────────────────────
+
 arch-chroot /mnt /bin/bash <<EOF
 set -e
 
-#set keymap
 echo "KEYMAP=${KEYMAP}" > /etc/vconsole.conf
+echo "LANG=$LOCALE" > /etc/locale.conf
+echo "$HOST" > /etc/hostname
 
-#timezone
-ln -sf "/usr/share/zoneinfo/\$ZONE" /etc/localtime
+ln -sf "/usr/share/zoneinfo/$ZONE" /etc/localtime
 hwclock --systohc
 
-#locale
-echo "\$LOCALE UTF-8" >> /etc/locale.gen
+echo "$LOCALE UTF-8" >> /etc/locale.gen
 locale-gen
-echo "LANG=\$LOCALE" > /etc/locale.conf
 
-#hostname
-echo "\$HOST" > /etc/hostname
-cat <<EOL >> /etc/hosts
+cat <<EOL > /etc/hosts
 127.0.0.1   localhost
 ::1         localhost
-127.0.1.1   \$HOST.localdomain \$HOST
+127.0.1.1   $HOST.localdomain $HOST
 EOL
 
-#useradd
-useradd -m -G wheel "\$USER"
-echo "set password for \$USER"
-echo "%wheel ALL=(ALL:ALL) NOPASSWD: ALL" > /etc/sudoers.d/wheel
+echo -e "KEYMAP=$KEYMAP\nXKBMODEL=pc105\nXKBLAYOUT=$KEYMAP\nXKBVARIANT=\nXKBOPTIONS=" > /etc/X11/xorg.conf.d/00-keyboard.conf
 
+useradd -m -G wheel "$USER"
 echo "root:$ROOTPASS" | chpasswd
 echo "$USER:$USERPASS" | chpasswd
+echo "%wheel ALL=(ALL:ALL) NOPASSWD: ALL" > /etc/sudoers.d/wheel
 
-#multilib
 sed -i '/\\[multilib\\]/,/Include/ s/^#//' /etc/pacman.conf
 pacman -Sy
 
-#autologin
-mkdir -p /etc/systemd/system/getty@tty1.service.d
-cat <<EOL2 > /etc/systemd/system/getty@tty1.service.d/override.conf
-[Service]
-ExecStart=
-ExecStart=-/usr/bin/agetty --autologin \$USER --noclear %I \$TERM
-EOL2
+mkdir -p /etc/sddm.conf.d
+cat <<EOL > /etc/sddm.conf.d/autologin.conf
+[Autologin]
+User=$USER
+Session=plasma
+DisplayServer=X11
+EOL
 
-#enable services
 systemctl enable NetworkManager
 systemctl enable sddm
 
-#bootloader
 bootctl install
-cat <<EOL3 > /boot/loader/loader.conf
+cat <<EOL > /boot/loader/loader.conf
 default arch
 timeout 2
 console-mode max
 editor no
-EOL3
+EOL
 
-cat <<EOL4 > /boot/loader/entries/arch.conf
+cat <<EOL > /boot/loader/entries/arch.conf
 title   Arch Linux LTS
 linux   /vmlinuz-linux-lts
 initrd  /initramfs-linux-lts.img
-options root=PARTUUID=\$ROOT_UUID rw quiet
-EOL4
+options root=PARTUUID=$ROOT_UUID rw quiet nvidia-drm.modeset=1
+EOL
 
-#download post-install script
-curl -o /home/\$USER/post-install.sh https://raw.githubusercontent.com/kiishiio/kdb/main/postinstall.sh
-chmod +x /home/\$USER/post-install.sh
-chown \$USER:\$USER /home/\$USER/post-install.sh
+curl -o /home/$USER/postinstall.sh https://raw.githubusercontent.com/kiishiio/kdb/main/postinstall.sh
+chmod +x /home/$USER/postinstall.sh
+chown $USER:$USER /home/$USER/postinstall.sh
 
 EOF
 
-echo "installation complete, you may reboot."
+echo "Installation complete. You may reboot now."
