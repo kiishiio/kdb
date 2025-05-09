@@ -57,7 +57,7 @@ mount --bind /sys /mnt/sys
 mount --bind /run /mnt/run
 
 #base system
-pacstrap /mnt bash base linux-lts linux-firmware sudo nano vim btrfs-progs networkmanager "plasma" "kde-applications" sddm sddm-kcm xorg-server nvidia nvidia-utils nvidia-settings lib32-mesa kvantum-qt5 kvantum-qt6
+pacstrap /mnt bash base linux-lts linux-firmware sudo nano vim btrfs-progs networkmanager "plasma" "kde-applications" sddm sddm-kcm xorg-server nvidia nvidia-utils nvidia-settings lib32-mesa kvantum-qt5
 
 #fstab
 genfstab -U /mnt >> /mnt/etc/fstab
