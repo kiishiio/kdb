@@ -55,6 +55,11 @@ mkdir -p /mnt/boot /mnt/home
 mount "$P1" /mnt/boot
 mount "$P4" /mnt/home
 
+mount --bind /dev /mnt/dev
+mount --bind /proc /mnt/proc
+mount --bind /sys /mnt/sys
+mount --bind /run /mnt/run
+
 clear
 
 #base system
