@@ -9,11 +9,25 @@ clear
 
 #list & ask drives
 lsblk
-read -p "enter drive to install on (eg. /dev/sda): " DRIVE
+read -p "enter drive to install on (eg. sda or nvme0n1): " DRIVE
+DRIVE="/dev/${DRIVE##/dev/}"
 
 #confirm
 read -p "this will erase $DRIVE, and all its data. are you sure you want to continue? (y/n): " CONFIRM
 [[ "$CONFIRM" != "y" ]] && exit 1
+
+#determine proper suffix
+if [[ "$DRIVE" =~ nvme ]]; then
+    P1="${DRIVE}p1"
+    P2="${DRIVE}p2"
+    P3="${DRIVE}p3"
+    P4="${DRIVE}p4"
+else
+    P1="${DRIVE}1"
+    P2="${DRIVE}2"
+    P3="${DRIVE}3"
+    P4="${DRIVE}4"
+fi
 
 clear
 
@@ -29,11 +43,11 @@ sgdisk -n 3:0:+${ROOTSIZE}G -t 3:8300 "$DRIVE"
 sgdisk -n 4:0:0 -t 4:8300 "$DRIVE"
 
 #format drive
-mkfs.fat -F32 "${DRIVE}1"
-mkswap "${DRIVE}2"
-swapon "${DRIVE}2"
-mkfs.btrfs -f "${DRIVE}3"
-mkfs.btrfs -f "${DRIVE}4"
+mkfs.fat -F32 "$P1"
+mkswap "$P2"
+swapon "$P2"
+mkfs.btrfs -f "$P3"
+mkfs.btrfs -f "$P4"
 
 #mount
 mount "${DRIVE}3" /mnt
