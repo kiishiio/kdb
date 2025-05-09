@@ -147,9 +147,9 @@ options root=PARTUUID=\$ROOT_UUID rw quiet
 EOL4
 
 #download post-install script
-curl -o /home/$USER/post-install.sh https://raw.githubusercontent.com/kiishiio/kdb/refs/heads/main/postinstall.sh
-chmod +x /home/$USER/post-install.sh
-chown $USER:$USER /home/$USER/post-install.sh
+curl -o /home/\$USER/post-install.sh https://raw.githubusercontent.com/kiishiio/kdb/refs/heads/main/postinstall.sh
+chmod +x /home/\$USER/post-install.sh
+chown \$USER:\$USER /home/\$USER/post-install.sh
 
 EOF
 
