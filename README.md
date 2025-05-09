@@ -3,8 +3,10 @@
 #### for easy install and recreation.
 
 ###### install
-run `
+run
+```bash
 curl -O https://raw.githubusercontent.com/kiishiio/kdb/refs/heads/main/sysinstall.sh
 chmod +x sysinstall.sh
-./install.sh`
+./install.sh
+```
 from your terminal in the usb bootable
