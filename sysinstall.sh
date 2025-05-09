@@ -71,9 +71,11 @@ genfstab -U /mnt >> /mnt/etc/fstab
 #
 ROOT_UUID=$(blkid -s PARTUUID -o value "${DRIVE}3")
 export ROOT_UUID
+export DRIVE
+export KEYMAP
 
 #chroot
-arch-chroot /mnt /bin/bash <<'EOF'
+arch-chroot /mnt /bin/bash <<EOF
 set -e
 
 #set keymap
