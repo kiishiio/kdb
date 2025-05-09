@@ -19,7 +19,7 @@ sudo pacman -S --noconfirm \
     alsa-utils bluez bluez-utils \
     qbittorrent audacious wget screen git fastfetch cups \
     pipewire wireplumber pipewire-audio pipewire-alsa pipewire-pulse easyeffects \
-    pacman-contrib
+    pacman-contrib lib32-mesa
 
 sudo systemctl enable bluetooth.service
 sudo systemctl enable sshd.service
