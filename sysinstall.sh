@@ -50,10 +50,10 @@ mkfs.btrfs -f "$P3"
 mkfs.btrfs -f "$P4"
 
 #mount
-mount "${DRIVE}3" /mnt
+mount "$P3" /mnt
 mkdir -p /mnt/boot /mnt/home
-mount "${DRIVE}1" /mnt/boot
-mount "${DRIVE}4" /mnt/home
+mount "$P1" /mnt/boot
+mount "$P4" /mnt/home
 
 clear
 
