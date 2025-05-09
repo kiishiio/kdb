@@ -5,8 +5,6 @@ read -p "enter keymap (default: us): " KEYMAP
 KEYMAP=${KEYMAP:-us}
 loadkeys "$KEYMAP"
 
-clear
-
 #list & ask drives
 lsblk
 read -p "enter drive to install on (eg. sda or nvme0n1): " DRIVE
@@ -28,8 +26,6 @@ else
     P3="${DRIVE}3"
     P4="${DRIVE}4"
 fi
-
-clear
 
 #root size
 read -p "what size shall the root partition in GB be? (default: 40): " ROOTSIZE
@@ -73,7 +69,7 @@ export DRIVE
 export KEYMAP
 
 #chroot
-arch-chroot /mnt /usr/bin/bash <<EOF
+arch-chroot /mnt /bin/bash <<EOF
 set -e
 
 #set keymap
