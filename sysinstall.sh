@@ -79,7 +79,7 @@ arch-chroot /mnt /bin/bash <<EOF
 set -e
 
 #set keymap
-echo "KEYMAP=$KEYMAP" > /etc/vconsole.conf
+echo "KEYMAP=${KEYMAP}" > /etc/vconsole.conf
 
 #timezone
 ls /usr/share/zoneinfo/
