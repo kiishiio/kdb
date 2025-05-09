@@ -75,7 +75,7 @@ export DRIVE
 export KEYMAP
 
 #chroot
-arch-chroot /mnt /bin/bash <<EOF
+arch-chroot /mnt /usr/bin/bash <<EOF
 set -e
 
 #set keymap
