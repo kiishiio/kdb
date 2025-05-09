@@ -1,11 +1,30 @@
 #!/bin/bash
 
-#keymap
+#prompts
 read -p "enter keymap (default: us): " KEYMAP
 KEYMAP=${KEYMAP:-us}
 loadkeys "$KEYMAP"
 
-#list & ask drives
+clear
+
+read -p "enter username: " USER
+
+clear
+
+ls /usr/share/zoneinfo/
+read -p "enter timezone (eg. Europe/Berlin): " ZONE
+
+clear
+
+read -p "enter locale (default: en_US.UTF-8): " LOCALE
+LOCALE=${LOCALE:-en_US.UTF-8}
+
+clear
+
+read -p "enter hostname: " HOST
+
+clear
+
 lsblk
 read -p "enter drive to install on (eg. sda or nvme0n1): " DRIVE
 DRIVE="/dev/${DRIVE##/dev/}"
@@ -13,6 +32,12 @@ DRIVE="/dev/${DRIVE##/dev/}"
 #confirm
 read -p "this will erase $DRIVE, and all its data. are you sure you want to continue? (y/n): " CONFIRM
 [[ "$CONFIRM" != "y" ]] && exit 1
+
+clear
+
+read -p "what size shall the root partition in GB be? (default: 40): " ROOTSIZE
+ROOTSIZE=${ROOTSIZE:-40}
+
 
 #determine proper suffix
 if [[ "$DRIVE" =~ nvme ]]; then
@@ -26,10 +51,6 @@ else
     P3="${DRIVE}3"
     P4="${DRIVE}4"
 fi
-
-#root size
-read -p "what size shall the root partition in GB be? (default: 40): " ROOTSIZE
-ROOTSIZE=${ROOTSIZE:-40}
 
 #wipe drive
 sgdisk --zap-all "$DRIVE"
@@ -64,9 +85,14 @@ genfstab -U /mnt >> /mnt/etc/fstab
 
 #
 ROOT_UUID=$(blkid -s PARTUUID -o value "${DRIVE}3")
+
 export ROOT_UUID
 export DRIVE
 export KEYMAP
+export USER
+export ZONE
+export LOCALE
+export HOST
 
 #chroot
 arch-chroot /mnt /bin/bash <<EOF
@@ -76,20 +102,15 @@ set -e
 echo "KEYMAP=${KEYMAP}" > /etc/vconsole.conf
 
 #timezone
-ls /usr/share/zoneinfo/
-read -p "enter timezone (eg. Europe/Berlin): " ZONE
 ln -sf "/usr/share/zoneinfo/\$ZONE" /etc/localtime
 hwclock --systohc
 
 #locale
-read -p "enter locale (default: en_US.UTF-8): " LOCALE
-LOCALE="\${LOCALE:-en_US.UTF-8}"
 echo "\$LOCALE UTF-8" >> /etc/locale.gen
 locale-gen
 echo "LANG=\$LOCALE" > /etc/locale.conf
 
 #hostname
-read -p "enter hostname: " HOST
 echo "\$HOST" > /etc/hostname
 cat <<EOL >> /etc/hosts
 127.0.0.1   localhost
@@ -102,7 +123,6 @@ echo "set root password"
 passwd
 
 #useradd
-read -p "enter username: " USER
 useradd -m -G wheel "\$USER"
 echo "set password for \$USER"
 passwd "\$USER"
