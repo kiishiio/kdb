@@ -83,7 +83,7 @@ hwclock --systohc
 
 #locale
 read -p "enter locale (default: en_US.UTF-8): " LOCALE
-LOCALE=\${LOCALE:-en_US.UTF-8}
+LOCALE="\${LOCALE:-en_US.UTF-8}"
 echo "\$LOCALE UTF-8" >> /etc/locale.gen
 locale-gen
 echo "LANG=\$LOCALE" > /etc/locale.conf
