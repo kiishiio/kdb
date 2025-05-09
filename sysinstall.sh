@@ -63,10 +63,7 @@ mount --bind /run /mnt/run
 clear
 
 #base system
-pacstrap -K /mnt bash base linux-lts linux-firmware sudo nano vim \
-    btrfs-progs networkmanager plasma kde-applications sddm sddm-kcm \
-    xorg-server nvidia nvidia-utils nvidia-settings lib32-mesa \
-    kvantum-qt5 kvantum-qt6
+pacstrap -K /mnt bash base linux-lts linux-firmware sudo nano vim btrfs-progs networkmanager plasma kde-applications sddm sddm-kcm xorg-server nvidia nvidia-utils nvidia-settings lib32-mesa kvantum-qt5 kvantum-qt6
 
 clear
 
