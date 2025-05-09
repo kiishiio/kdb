@@ -11,6 +11,11 @@ read -p "enter username: " USER
 
 clear
 
+read -s -p "root password: " ROOTPASS; echo
+read -s -p "user password: " USERPASS; echo
+
+clear
+
 ls /usr/share/zoneinfo/
 read -p "enter timezone (eg. Europe/Berlin): " ZONE
 
@@ -90,6 +95,8 @@ export ROOT_UUID
 export DRIVE
 export KEYMAP
 export USER
+export USERPASS
+export ROOTPASS
 export ZONE
 export LOCALE
 export HOST
@@ -118,15 +125,13 @@ cat <<EOL >> /etc/hosts
 127.0.1.1   \$HOST.localdomain \$HOST
 EOL
 
-#root pw
-echo "set root password"
-passwd
-
 #useradd
 useradd -m -G wheel "\$USER"
 echo "set password for \$USER"
-passwd "\$USER"
 echo "%wheel ALL=(ALL:ALL) NOPASSWD: ALL" > /etc/sudoers.d/wheel
+
+echo "root:$ROOTPASS" | chpasswd
+echo "$USER:$USERPASS" | chpasswd
 
 #multilib
 sed -i '/\\[multilib\\]/,/Include/ s/^#//' /etc/pacman.conf
