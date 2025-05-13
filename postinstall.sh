@@ -24,7 +24,7 @@ sudo pacman -S --noconfirm \
     lutris \
     obsidian \
     code \
-    jetbrains-toolbox
+    lib32-nvidia-utils
 
 # ─────────────────────────────
 # ENABLE SERVICES
