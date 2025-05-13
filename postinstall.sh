@@ -91,14 +91,11 @@ sudo mkinitcpio -P
 
 # Create Xorg configuration for NVIDIA
 sudo mkdir -p /etc/X11/xorg.conf.d
-sudo tee /etc/X11/xorg.conf.d/10-nvidia.conf > /dev/null <<EOL
+cat <<EOL > /etc/X11/xorg.conf.d/10-nvidia.conf
 Section "Device"
     Identifier "Nvidia Card"
     Driver "nvidia"
-    Option "TripleBuffer" "On"
-    Option "AllowEmptyInitialConfiguration"
     Option "Coolbits" "28"
-    Option "ForceFullCompositionPipeline" "true"
 EndSection
 EOL
 

@@ -79,7 +79,7 @@ pacstrap /mnt \
     plasma-meta konsole dolphin ark kwrite kcalc spectacle krunner partitionmanager packagekit-qt5 systemsettings \
     kvantum-qt5 \
     sddm sddm-kcm \
-    nvidia nvidia-utils nvidia-settings nvidia-dkms --noconfirm
+    nvidia nvidia-utils nvidia-dkms lib32-nvidia-utils --noconfirm
 
 genfstab -U /mnt >> /mnt/etc/fstab
 
@@ -94,6 +94,8 @@ export ROOT_UUID
 
 arch-chroot /mnt /bin/bash <<EOF
 set -e
+
+sudo mkinitcpio -P
 
 echo "KEYMAP=${KEYMAP}" > /etc/vconsole.conf
 echo "LANG=$LOCALE" > /etc/locale.conf
@@ -126,7 +128,7 @@ cat <<EOL > /etc/sddm.conf.d/autologin.conf
 [Autologin]
 User=$USER
 Session=plasma
-DisplayServer=X11
+DisplayServer=x11
 EOL
 
 systemctl enable NetworkManager
@@ -146,6 +148,9 @@ linux   /vmlinuz-linux-lts
 initrd  /initramfs-linux-lts.img
 options root=PARTUUID=$ROOT_UUID rw quiet nvidia-drm.modeset=1
 EOL
+
+echo "exec startplasma-x11" > /home/$USER/.xinitrc
+chown $USER:$USER /home/$USER/.xinitrc
 
 curl -o /home/$USER/postinstall.sh https://raw.githubusercontent.com/kiishiio/kdb/main/postinstall.sh
 chmod +x /home/$USER/postinstall.sh
