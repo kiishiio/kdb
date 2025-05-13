@@ -79,7 +79,7 @@ pacstrap /mnt \
     plasma-meta konsole dolphin ark kwrite kcalc spectacle krunner partitionmanager packagekit-qt5 systemsettings \
     kvantum-qt5 \
     sddm sddm-kcm \
-    nvidia nvidia-utils nvidia-dkms lib32-nvidia-utils --noconfirm
+    nvidia nvidia-utils nvidia-dkms --noconfirm
 
 genfstab -U /mnt >> /mnt/etc/fstab
 
